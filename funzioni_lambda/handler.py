@@ -17,7 +17,7 @@ def _invoke(fn_name, event):
     )
 
     if resp.get("FunctionError"):
-        print(f"Errore nella Lambda {fn_name}: {resp['Payload'].read()}")
+        print(f"Error in Lambda function {fn_name}: {resp['Payload'].read()}")
         return {
             "sessionState": {"dialogAction": {"type": "ElicitIntent"}},
             "messages": [{
