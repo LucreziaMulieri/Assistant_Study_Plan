@@ -1,0 +1,18 @@
+{
+  "sessionState": {
+    "intent": {
+      "name": "Old_Choices_Second_Master",
+      "slots": {}
+    },
+    "sessionAttributes": {
+      "ChosenCoursesSecondYearMaster": "advanced control, optimization and process analysis",
+      "ChosenCourseFirstYear": "nonlinear control, dynamics and control of intelligent robots and vehicles",
+      "ChosenCoursesThirdYear": "industrial automation, digital control systems",
+      "ChosenCoursesSecondYearBachelor": "mathematical methods for automation engineering, numerical analysis",
+      "PossibleCoursesFirstYear": "yes",
+      "PossibleCoursesSecondYear": "yes",
+      "PossibleCoursesThirdYear": "yes",
+      "StartingQuestion": "old choices second master"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "sessionState": {
+    "intent": {
+      "name": "Specific_Course",
+      "slots": {
+        "FirstYearMasterDegree": null,
+        "SecondYearMasterDegree": null,
+        "SecondYearBachelorDegree": null,
+        "ThirdYearBachelorDegree": {
+          "value": {
+            "interpretedValue": "operating systems",
+            "resolvedValues": [
+              "Operating Systems"
+            ]
+          }
+        },
+        "SpecificInformation": {
+          "value": {
+            "interpretedValue": "summary",
+            "resolvedValues": [
+              "summary"
+            ]
+          }
+        }
+      }
+    },
+    "sessionAttributes": {
+      "EducationalPathType": "bachelor degree",
+      "BachelorYear": "third year",
+      "MasterYear": ""
+    }
+  }
+}
