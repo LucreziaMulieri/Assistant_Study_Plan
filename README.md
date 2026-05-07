@@ -29,6 +29,11 @@ provided by Amazon Web Services. These include:
 provide a list of courses related to the user's choices, attempting to target them based on their area of ​​interest, for example, automation courses rather than computer science courses; the last is a handler that allows the other two to be
 dynamically called at points of interest in the conversation.
 
+## Demo
+
+Try the chatbot at the following link:  
+[Study Plan Assistant](https://dw5yknl67tidn.cloudfront.net/index.html)
+
 ## References & Credits
 
 - [aws-lex-web-ui](https://github.com/aws-samples/aws-lex-web-ui) — Sample project 
