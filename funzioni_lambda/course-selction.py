@@ -7,12 +7,16 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 logger.info("Module loading started")
+
 #client
+
 lex_client = boto3.client("lexv2-models")
+dynamodb = boto3.resource("dynamodb")
 
 logger.info("Boto3 client created")
 
-#enviroment variables
+#environment variables
+
 try:
     BOT_ID = os.environ["BOT_ID"]
     logger.info(f"BOT_ID loaded: {BOT_ID}")
@@ -27,8 +31,15 @@ SLOT_TYPE_ID_B3 = os.getenv("SLOT_TYPE_ID_B3")
 SLOT_TYPE_ID_M1 = os.getenv("SLOT_TYPE_ID_M1")
 SLOT_TYPE_ID_M2 = os.getenv("SLOT_TYPE_ID_M2")
 
+COURSES_TABLE = os.getenv("COURSES_TABLE", "courses")
+
+#dynamoDB table connection
+
+table = dynamodb.Table(COURSES_TABLE)
+
 #cache manage
 _courses_cache = {}
+_area_cache = {}  
 
 #gets courses from lex slots
 def get_courses_from_lex(slot_type_id: str) -> list:
@@ -59,13 +70,13 @@ def get_all_courses() -> dict:
         "master_year_2":   get_courses_from_lex(SLOT_TYPE_ID_M2),
     }
 
+
 #gets values from slots
 def get_slot_values(slots, slot_name):
     slot = slots.get(slot_name)
     if not slot:
         return []
 
-    
     values = slot.get("values")
     if values:
         result = []
@@ -80,7 +91,6 @@ def get_slot_values(slots, slot_name):
                     result.append(interpreted)
         return result
 
-    
     value = slot.get("value", {})
     resolved = value.get("resolvedValues", [])
     if resolved:
@@ -117,93 +127,89 @@ def normalize(text: str) -> str:
     return text.lower().strip()
 
 
-# Keys are already lowercase — normalize() on input will match reliably
-AREA_MAP = {
-    "cybersecurity for networks":                                "cybersecurity",
-    "ethical hacking":                                           "cybersecurity",
-    "advanced programming": "cybersecurity",
-    "software security and blockchain": "cybersecurity",
-    "advanced cybersecurity for it":                             "cybersecurity",
-    "big data analytics and machine learning":                   "ai_ml",
-    "computer vision and deep learning":                         "ai_ml",
-    "artificial intelligence":                                   "ai_ml",
-    "digital adaptive circuits and learning systems":            "ai_ml",
-    "data science":                                              "ai_ml",
-    "new generation databases":                                  "ai_ml",
-    "computer graphics and multimedia":                          "ai_ml",
-    "nonlinear control":                                         "automatica",
-    "dynamics and control of intelligent robots and vehicles":   "automatica",
-    "optimal filtering and control of stochastic processes":     "automatica",
-    "mechanics of automatic machinery":                          "automatica",
-    "advanced control, optimization and process analysis":        "automatica",
-    "laboratory of mechatronics and cyber-physical systems":     "automatica",
-    "drive systems for automation and robotics":                 "automatica",
-    "special purpose operating systems":                         "automatica",
-    "industrial automation":                                     "automatica",
-    "modeling and identification of dynamic processes":          "automatica",
-    "computer aided control design":                             "automatica",
-    "digital control systems":                                   "automatica",
-    "automation laboratory":                                     "automatica",
-}
-
-# All course names stored in lowercase for consistent comparison and suggestion
+# All course names stored in lowercase for consistent comparison and suggestion.
 AREA_SUGGESTIONS = {
     "cybersecurity": {
-        "master_year_1":   ["cybersecurity for networks", "ethical hacking",
-                            "advanced programming", "software security and blockchain"],
-        "master_year_2":   ["advanced cybersecurity for it", "special purpose operating systems"],
-        "bachelor_year_3": ["operating systems", "computer architecture and cloud computing"],
-        "bachelor_year_2" : ["software engineering", "algebra and logics", "probability and statistics"],
+        "master_year_1":   ["cybersecurity for networks", "ethical hacking", "software security and blockchain"],
+        "master_year_2":   ["advanced cybersecurity for it"],
+        "bachelor_year_3": [],
+        "bachelor_year_2": [],
     },
     "ai_ml": {
         "master_year_1":   ["big data analytics and machine learning",
                             "computer vision and deep learning", "artificial intelligence",
                             "digital adaptive circuits and learning systems"],
-        "master_year_2":   ["data science", "new generation databases",
-                            "computer graphics and multimedia"],
-        "bachelor_year_3": ["databases", "web technologies", "mobile programming"],
-        "bachelor_year_2" : ["software engineering", "algebra and logics", "probability and statistics"],
+        "master_year_2":   ["data science"],
+        "bachelor_year_3": [],
+        "bachelor_year_2": [],
     },
-    "automatica": {
+    "automation": {
         "master_year_1":   ["nonlinear control",
                             "dynamics and control of intelligent robots and vehicles",
                             "optimal filtering and control of stochastic processes",
-                            "mechanics of automatic machinery"],
-        "master_year_2":   ["advanced control", "optimization and process analysis",
+                            "mechanics of automatic machinery", "modern physics for engineering"],
+        "master_year_2":   ["advanced control, optimization and process analysis",
                             "laboratory of mechatronics and cyber-physical systems",
                             "drive systems for automation and robotics"],
         "bachelor_year_3": ["industrial automation", "digital control systems",
                             "modeling and identification of dynamic processes",
                             "computer aided control design", "automation laboratory"],
-        "bachelor_year_2" : ["mathematical methods for automation engineering", "numerical analysis", "analytical mechanics"],
+        "bachelor_year_2": ["mathematical methods for automation engineering",
+                            "numerical analysis", "analytical mechanics", "algebra and logics", "probability and statistics"],
+    },
+    "computer science": {
+        "master_year_1":   ["advanced programming", "modern physics for engineering"],
+        "master_year_2":   ["computer graphics and multimedia", "programming languages", "new generation databases", "special purpose operating systems", "databases"],
+        "bachelor_year_3": ["computer architecture and cloud computing", "mobile programming", "operating systems"],
+        "bachelor_year_2": ["algebra and logics","software engineering", "probability and statistics", "numerical analysis", "web technologies"],
     },
 }
 
 AREA_LABELS = {
-    "cybersecurity": "Cybersecurity",
-    "ai_ml":         "AI / Machine Learning",
-    "automatica":    "Automatica and Control",
+    "cybersecurity":     "Cybersecurity",
+    "ai_ml":             "AI / Machine Learning",
+    "automation":        "Automation and Control",
+    "computer science":  "Computer Science",
 }
+
+
+def get_course_areas(course: str) -> set:
+    """Get the areas for a course by querying DynamoDB and caching the result in cache in-process."""
+    key = normalize(course)
+    if key in _area_cache:
+        return _area_cache[key]
+    try:
+        response = table.get_item(Key={"course_name": key})
+        item = response.get("Item")
+        areas = set(item.get("area", [])) if item else set()
+        _area_cache[key] = areas
+        return areas
+    except Exception as e:
+        logger.error(f"DynamoDB get_item failed for course={key}: {e}")
+        return set()
 
 
 #detect the areas
 def detect_areas(chosen_courses: list) -> set:
     areas = set()
     for course in chosen_courses:
-        area = AREA_MAP.get(normalize(course))
-        if area:
-            areas.add(area)
+        areas |= get_course_areas(course)
     return areas
 
 
 def _get_candidates(areas: set, year_key: str, chosen_lower: set) -> list:
-    """Return suggested courses for the given areas and year, excluding already chosen ones."""
+    """Return suggested courses for the given areas and year, excluding already
+    chosen ones and avoiding duplicates when a course appears under more than
+    one area"""
     candidates = []
+    seen = set()
     for area in areas:
         for course in AREA_SUGGESTIONS.get(area, {}).get(year_key, []):
-            if course not in chosen_lower:
+            if course not in chosen_lower and course not in seen:
+                seen.add(course)
                 candidates.append(course.title())
     return candidates
+
 
 #build the response based on the slots
 def _build_lines(slots, session, include_bachelor_y3: bool, include_master_y1: bool, include_bachelor_y2: bool) -> list:
@@ -230,7 +236,7 @@ def _build_lines(slots, session, include_bachelor_y3: bool, include_master_y1: b
 
     lines = []
 
-    # Master year 2 
+    # Master year 2
     candidates = _get_candidates(areas, "master_year_2", chosen_lower)
     lines.append(
         f"Since you're interested in {format_list(m2)} for your second year of your master's degree, "
