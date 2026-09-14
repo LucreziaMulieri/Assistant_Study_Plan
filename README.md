@@ -23,7 +23,7 @@ provided by Amazon Web Services. These include:
   infrastructure, with the ability to create a template specifying all the 
   services used along with their configurations, enabling automatic deployment.
 
-  <img width="2813" height="1625" alt="architettura" src="https://github.com/user-attachments/assets/2ece72b8-ab74-4add-a69b-f53b5e1c5d2e" />
+<img width="1920" height="781" alt="architettura_chatbot" src="https://github.com/user-attachments/assets/60c7290e-2a94-4175-b877-fbf3f1e2dcba" />
 
   Specifically, three Lambda functions were created: one to provide additional information about a specific course specified by the user, for example, if the user wishes to know the syllabus for a particular course; the second to
 provide a list of courses related to the user's choices, attempting to target them based on their area of ​​interest, for example, automation courses rather than computer science courses; the last is a handler that allows the other two to be
