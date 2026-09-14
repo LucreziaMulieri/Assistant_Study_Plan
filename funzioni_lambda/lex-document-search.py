@@ -91,8 +91,7 @@ def get_course_info(course_name: str, specific: str = None) -> tuple[str, bool]:
         if any(w in specific_lower for w in ["professor", "teacher", "instructor", "lecturer"]):
             return f"Professor for {display}: {item.get('professor', 'not available')}", True
         if any(w in specific_lower for w in ["prerequisite", "requirements", "required"]):
-            prereqs = ", ".join(item.get("prerequisites", [])) or "none"
-            return f"Prerequisites for {display}: {prereqs}", True
+            return f"Prerequisites for {display}: {item.get('prerequisites', 'not available')}", True
         if any(w in specific_lower for w in ["language", "taught in"]):
             return f"{display} is taught in: {item.get('language', 'not available')}", True
         if any(w in specific_lower for w in ["credit", "cfu", "ects"]):
@@ -100,7 +99,6 @@ def get_course_info(course_name: str, specific: str = None) -> tuple[str, bool]:
 
     # Full response if no specific info requested
     topics  = ", ".join(item.get("topics", [])) or "not specified"
-    prereqs = ", ".join(item.get("prerequisites", [])) or "none"
 
     return (
         (
@@ -110,7 +108,7 @@ def get_course_info(course_name: str, specific: str = None) -> tuple[str, bool]:
             f"Language: {item.get('language', 'n/a')}\n\n"
             f"Summary: {item.get('summary', 'n/a')}\n\n"
             f"Syllabus: {item.get('syllabus', 'n/a')}\n"
-            f"Prerequisites: {prereqs}"
+            f"Prerequisites: {item.get('prerequisites', 'n/a')}"
         ),
         True,
     )
