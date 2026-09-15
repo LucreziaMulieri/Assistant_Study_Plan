@@ -42,4 +42,8 @@ Try the chatbot at the following link:
 - [Deploy a web UI for your chatbot](https://aws.amazon.com/it/blogs/machine-learning/deploy-a-web-ui-for-your-chatbot/) — 
   Official AWS Machine Learning blog post used as a reference guide for the 
   deployment of the web interface.
+- Other references used for the project:
+ https://docs.aws.amazon.com/it_it/sdk-for-javascript/v3/developer-guide/lex-bot-example.html#lex-bot-example-html
+https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/javav2/usecases/creating_lex_chatbot
+https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/resources/cdk/lex_bot_example_iam_unauth_role
 
