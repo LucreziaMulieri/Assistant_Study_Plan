@@ -81,24 +81,32 @@ def get_course_info(course_name: str, specific: str = None) -> tuple[str, bool]:
 
     display = item.get("display_name", course_name.title())
 
-    # If the user asked for something specific
+    # If the user asked for something specific (can combine multiple topics)
     if specific:
         specific_lower = normalize(specific)
+        parts = []
+
         if any(w in specific_lower for w in ["exam", "test", "assessment", "evaluation"]):
-            return f"Exam format for {display}:\n{item.get('exam_format', 'Information not available.')}", True
-        if any(w in specific_lower for w in ["syllabus", "program", "content", "subjects"]):
-            return f"Syllabus for {display}:\n{item.get('syllabus', 'not available')}", True
+            parts.append(f"Exam format: {item.get('exam_format', 'not available')}")
+        if any(w in specific_lower for w in ["syllabus", "program"]):
+            parts.append(f"Syllabus: {item.get('syllabus', 'not available')}")
+        if any(w in specific_lower for w in ["topic", "topics", "arguments", "content", "subjects"]):
+            topics = ", ".join(item.get("topics", [])) or "not specified"
+            parts.append(f"Topics: {topics}")
         if any(w in specific_lower for w in ["professor", "teacher", "instructor", "lecturer"]):
-            return f"Professor for {display}: {item.get('professor', 'not available')}", True
+            parts.append(f"Professor: {item.get('professor', 'not available')}")
         if any(w in specific_lower for w in ["prerequisite", "requirements", "required"]):
-            return f"Prerequisites for {display}: {item.get('prerequisites', 'not available')}", True
+            parts.append(f"Prerequisites: {item.get('prerequisites', 'not available')}")
         if any(w in specific_lower for w in ["language", "taught in"]):
-            return f"{display} is taught in: {item.get('language', 'not available')}", True
+            parts.append(f"Language: {item.get('language', 'not available')}")
         if any(w in specific_lower for w in ["credit", "cfu", "ects"]):
-            return f"{display} is worth {item.get('credits', 'n/a')} credits.", True
+            parts.append(f"Credits: {item.get('credits', 'n/a')}")
+
+        if parts:
+            return f"{display}:\n" + "\n".join(parts), True
 
     # Full response if no specific info requested
-    topics  = ", ".join(item.get("topics", [])) or "not specified"
+    topics = ", ".join(item.get("topics", [])) or "not specified"
 
     return (
         (
@@ -145,9 +153,8 @@ def handle_specific_course(slots, session, intent: str) -> dict:
             course = get_slot_values(slots, "ThirdYearBachelorDegree")
 
     specific = get_slot_values(slots, "SpecificInformation")
-
     course_name   = course[0]   if course   else None
-    specific_info = specific[0] if specific else None
+    specific_info = " ".join(specific) if specific else None
 
     logger.info(f"Specific course request — course: {course_name}, specific: {specific_info}")
 
