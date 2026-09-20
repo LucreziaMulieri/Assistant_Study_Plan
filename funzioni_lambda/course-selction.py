@@ -123,7 +123,6 @@ def format_list(items: list) -> str:
 
 
 def normalize(text: str) -> str:
-    """Normalize a course name to lowercase and stripped for consistent comparison."""
     return text.lower().strip()
 
 
@@ -196,11 +195,8 @@ def detect_areas(chosen_courses: list) -> set:
         areas |= get_course_areas(course)
     return areas
 
-
+# return suggested courses
 def _get_candidates(areas: set, year_key: str, chosen_lower: set) -> list:
-    """Return suggested courses for the given areas and year, excluding already
-    chosen ones and avoiding duplicates when a course appears under more than
-    one area"""
     candidates = []
     seen = set()
     for area in areas:
@@ -213,12 +209,6 @@ def _get_candidates(areas: set, year_key: str, chosen_lower: set) -> list:
 
 #build the response based on the slots
 def _build_lines(slots, session, include_bachelor_y3: bool, include_master_y1: bool, include_bachelor_y2: bool) -> list:
-    """
-    Unified builder for response lines.
-    Reads course data from sessionAttributes, flags from slots or sessionAttributes
-    depending on the intent.
-    """
-
     def get_session_courses(key: str) -> list:
         value = session.get(key, "")
         if not value:
@@ -303,15 +293,11 @@ def lambda_handler(event, context=None):
 
     #read the slots and update the session
     def merge_courses_from_slot(slot_name: str, session_key: str) -> dict:
-        """
-        read the multi-value from the slots and adds it to the session,
-        merging the ones already existing.
-        """
         from_slot = get_slot_values(slots, slot_name)
         if not from_slot:
             return {}
         existing = [v.strip() for v in session.get(session_key, "").split(",") if v.strip()]
-        merged = list(dict.fromkeys(existing + from_slot))  #remove duplicates while preserving order
+        merged = list(dict.fromkeys(existing + from_slot))  
         return {session_key: ", ".join(merged)}
 
     updated_session = {
