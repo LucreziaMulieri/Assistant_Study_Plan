@@ -55,16 +55,13 @@ def build_fulfillment_response(
 
 
 def normalize(text: str) -> str:
-    """Normalize a string to lowercase and stripped for consistent comparison."""
     return text.lower().strip()
 
 
 #gets information about the course
-
 def get_course_info(course_name: str, specific: str = None) -> tuple[str, bool]:
     """
     Fetch course details from DynamoDB and format the response.
-    Returns (message, found) so that client can manage correct state.
     """
     try:
         response = table.get_item(Key={"course_name": normalize(course_name)})
@@ -81,7 +78,7 @@ def get_course_info(course_name: str, specific: str = None) -> tuple[str, bool]:
 
     display = item.get("display_name", course_name.title())
 
-    # If the user asked for something specific (can combine multiple topics)
+    # If the user asked for something specific 
     if specific:
         specific_lower = normalize(specific)
         parts = []
